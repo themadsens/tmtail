@@ -1,0 +1,294 @@
+#!/usr/bin/env bash
+##
+# @file tmtail
+#
+# (C) Copyright 2026 fm@amplex.dk
+##
+
+TAIL_LINES=1000
+
+tmux-conf() {
+  cat << 'EOF'
+# --- General Settings ---
+set -g mouse on               # Enable mouse for scrolling/clicking if desired
+set -g history-limit 50000    # Generous scrollback buffer
+
+# --- Pane Title / Status Line Configuration ---
+set -g pane-border-status top
+set -g pane-border-format "#[fg=black,bg=cyan,bold] #{pane_title} #[default]"
+set -g pane-border-style "fg=colour238,bg=default"
+set -g pane-active-border-style "fg=colour238,bg=cyan"
+
+bind -n q kill-session
+bind -n Q kill-session
+bind -n : command-prompt
+
+# --- One-Key Pane Navigation ---
+bind -n M-Up 'select-pane -U; run-shell "tmtail -P #{pane_id} -X distribute-active50"'
+bind -n M-Down 'select-pane -D; run-shell "tmtail -P #{pane_id} -X distribute-active50"'
+bind -n M-k 'select-pane -U; run-shell "tmtail -P #{pane_id} -X distribute-active50"'
+bind -n M-j 'select-pane -D; run-shell "tmtail -P #{pane_id} -X distribute-active50"'
+bind -n Left select-pane -L
+bind -n Right select-pane -R
+bind -n Up select-pane -U
+bind -n Down select-pane -D
+bind -n k select-pane -U
+bind -n j select-pane -D
+bind -n _ resize-pane -y 90%          # Maximise pane
+bind -n = select-layout even-vertical # Even out panes
+bind -n U select-layout even-vertical # Even out panes'
+bind -n Escape select-layout even-vertical # Even out panes'
+bind -n M-= select-layout tiled # Even out panes
+bind -n z resize-pane -Z
+bind -n h display-popup -E -T 'Command keys' -w 65 -h 27 -x C -y C tmtail -X show-help
+bind -n ? display-popup -E -T 'Command keys' -w 65 -h 27 -x C -y C tmtail -X show-help
+
+# --- Copy Mode & Navigation ---
+bind -n B 'run-shell "#{?pane_zoomed_flag,,tmux resize-pane -Z;} tmux copy-mode"'
+setw -g mode-keys vi
+bind -T copy-mode-vi Escape run-shell 'tmux send -X cancel; tmux select-layout even-vertical'
+bind -T copy-mode-vi U run-shell 'tmux send -X cancel; tmux select-layout even-vertical'
+bind -T copy-mode-vi B send -X halfpage-up
+bind -T copy-mode-vi F send -X halfpage-down
+bind -T copy-mode-vi y send -X copy-selection
+bind -T copy-mode-vi Y send -X copy-line
+bind -T copy-mode-vi v send -X select-word
+
+#bind -n u choose-tree -F "#[fg=blue,bold]#{pane_title}#[default] (Pane #{pane_index}) -> #{pane_current_command}" \
+#                       "select-pane -t %1; resize-pane -y 90%"
+
+# --- 'u' to bring up a stable popup menu to choose and maximize a pane ---
+bind -n u run-shell 'tmtail -X select-for-maximize #{client_name}'
+# --- '+' to make current pane 50% height and distribute the rest evenly ---
+bind -n + run-shell 'tmtail -P #{pane_id} -X distribute-active50'
+# --- One-Key Marker Line (All Panes + Solid Background) ---
+bind -n Enter run-shell 'tmtail -X add-marker'
+bind -n Space run-shell 'tmtail -X add-marker'
+EOF
+}
+
+show-help() {
+  cat << 'EOF'
+
+  Up,k        Select next pane up
+  Down,j      Select next pane down
+  Left        Select next pane left
+  Right       Select next pane right
+  M-Up,M-k    Select next pane up and set height to 50%
+  M-Down,M-j  Select next pane down and set height to 50%
+  +           Set pane height to 50%
+  _           Set pane height to 90%
+  =,U,Escape  Show all panes in equal height
+  M-=         Show panes tiled
+  z           Zoom pane
+  u           Select pane from a menu to zoom (but not scroll)
+  B           Zoom pane (if not) and enter scrollback mode
+  B           One halfpage back if in scrollback mode already
+  F           One halfpage forward if in scrollback mode
+  y           Yank. Copy selection to clipboard
+  Y           Yank line to clipboard
+  ?,/,n,N,V   Search etc. in scrollback mode.
+              See man tmux / copy-mode for others
+  h,?         Show this help text
+  Enter,Space Add a marker line to all panes
+  :           Enter the tmux command prompt
+  q,Q         quit
+EOF
+  read -n 1 X
+}
+
+main() {
+  # --- Environment Protection ---
+  unset TMUX
+  unset TMUX_PANE
+  export TSESS=tmtail-$$
+
+  # Default tail history count
+
+  # Start the tmux session with the first file
+  FIRST_FILE="$1"
+  FIRST_CMD="tmtail -X tail_cmd \"$FIRST_FILE\" \"$TAIL_LINES\""
+  tmux -f <(tmux-conf) new-session -d -s "$TSESS" -n "multitail" "$FIRST_CMD"
+  tmux select-pane -t "$TSESS.0" -T "$(basename "$FIRST_FILE")"
+
+  # Loop through the remaining files and split the panes
+  shift
+  pane_index=1
+  for file in "$@"; do
+      CMD="tmtail -X tail_cmd \"$file\" \"$TAIL_LINES\""
+      tmux split-window -t "$TSESS" -v "$CMD"
+      tmux select-pane -t "$TSESS.$pane_index" -T "$(basename "$file")"
+      tmux select-layout -t "$TSESS" even-vertical
+      ((pane_index++))
+  done
+  tmux select-pane -t "$TSESS.0"
+
+  # Attach to the created session
+  tmux attach-session -t "$TSESS"
+}
+
+# Function to pick a highlighter and append tail parameters
+tail_cmd() {
+  local file="$1"
+  local lines="$2"
+  trap 'stty echoctl' EXIT
+  stty -echoctl
+  if [ $COLOR_CONFIG ] ;then
+    tail -n $lines -F "$file" | grcat.js $COLOR_CONFIG
+  else
+    tail -n $lines -F "$file" | grcat.js <(grcat_conf)
+  fi
+}
+
+grcat_conf() {
+  cat << 'EOF'
+# Wildfly logs
+
+# this is the WF accesslog: user, date, "REQ" code size
+regexp= ([\w_-]+) +\[(\d\d/\w\w\w/\d\d\d\d:\d\d:\d\d:\d\d) (\+\d\d\d\d)] "[^"]*" (\d+)
+colours=black, bold, blue, green, bold red
+======
+# everything in `'
+regexp=\`.+?\'
+colours=bold yellow
+count=more
+======
+# ip number
+regexp=\d{1,3}\.\d{1,3}\.\d{1,3}\.\d{1,3}
+colours=bold magenta
+count=more
+===========================
+regexp=amplex
+colours=blue bold on_bright_yellow
+=====
+#Keys
+regexp=[a-zA-Z_]+[=:]
+colours=bold
+=====
+regexp=\(([a-zA-Z_-]*.java)(:[0-9]*)\)
+colours=magenta,green
+=====
+regexp=^[0-9]*-[0-9]*-[0-9]* [0-9]*:[0-9]*:[0-9]*,[0-9]*
+colours=blue bold
+=====
+regexp=(TRACE|FINE|FINER|FINEST) *\[[^]]*] *(.*)$
+colours=black, bold cyan, red
+=====
+regexp=(DEBUG) *\[[^]]*] *(.*)$
+colours=blue
+=====
+regexp=(INFO) *\[[^]]*]* *(.*)$
+colours=black, bold green, red
+=====
+regexp=(WARN) *\[[^]]*]* *(.*)$
+colours=yellow
+=====
+regexp=(ERROR) *\[[^]]*]* *(.*)$
+colours=red
+=====
+regexp=(FATAL) *\[[^]]*]* *(.*)$
+colours=red bold
+=====
+regexp=(SEVERE) *\[[^]]*]* *(.*)$
+colours=red bold
+=====
+regexp=An (error occurred) at line
+colours=red
+=====
+regexp=WildFly.*\"Tweek\".*Started.*services
+colours=black on_green
+=====
+regexp=WildFly.*\"Tweek\".*stopped
+colours=black on_green
+=====
+regexp=^Caused by
+colours=red on_white bold
+
+EOF
+}
+
+select-for-maximize() {
+    menu_args=()
+    menu_args+=("Select log pane to maximize" 0 0)
+
+    idx=1
+    while read -r pid title; do \
+        # Each menu item: "Label" "Shortcut Key" "Command to execute" \
+        menu_args+=("($idx) $title" "$idx" "resize-pane -t $pid -Z")
+        ((idx++))
+    done < <(tmux list-panes -F "#{pane_id} #{pane_title}")
+
+    tmux display-menu -c $1 -t $TSESS -T "Log Files" "${menu_args[@]}"
+}
+
+distribute-active50() {
+  current_pane_id=$TPANE
+  total_height=$(tmux display-message -p "#{window_height}")
+
+  target_height=$(( total_height / 2 ))
+  other_height=$(( total_height - target_height ))
+
+  pane_count=$(tmux list-panes -F "#{pane_id}" | wc -l)
+  if [ "$pane_count" -gt 1 ]; then \
+    pane_share=$(( other_height / (pane_count - 1) ))
+    if [ "$pane_share" -lt 2 ]; then pane_share=2; fi
+      for pid in $(tmux list-panes -F "#{pane_id}" | grep -v "^${current_pane_id}$"); do \
+        tmux resize-pane -t "$pid" -y "$pane_share"
+      done
+  fi
+  tmux resize-pane -t "$current_pane_id" -y "$target_height"
+}
+
+add-marker() {
+  panes=$(tmux list-panes -t $TSESS -F "#{pane_id}")
+  timestamp=$(date +" %Y-%m-%d %H:%M:%S ")
+  if tmux paste-buffer -S -b "nonexistent_test_buffer" 2>&1 | grep -q "unknown flag"; then
+    raw_flag=""
+  else
+    raw_flag="-S"
+  fi
+
+  for pid in $panes; do \
+    width=$(tmux display-message -t "$TSESS.$pid" -p "#{pane_width}")
+    half_width=$(( (width - ${#timestamp}) / 2 ))
+    if [ $half_width -le 0 ]; then half_width=1; fi
+
+    marker_line=$(printf "%*s" $half_width '')
+    marker_line="${marker_line}${timestamp}"
+    rem_width=$(( width - ${#marker_line}))
+    if [ $rem_width -gt 0 ] ;then
+      marker_line="${marker_line}$(printf "%*s" $rem_width '')"
+    fi
+
+     tmux set-buffer -t $TSESS -b LINE "$(printf "\033[34m\033[1;103m%s\033[0m\n" "$marker_line")"
+     tmux paste-buffer $raw_flag -t $TSESS.$pid -b LINE
+    done
+}
+
+usage() {
+  echo "Usage: ${0##*/} [-n lines] [-c colorconf] <file1> [file2] [file3] ..."
+  exit 1
+}
+
+while getopts "n:c:P:X:x" opt; do
+  case "$opt" in
+    n) TAIL_LINES=$OPTARG ;;
+    c) COLOR_CONFIG=$OPTARG ;;
+    P) TPANE=$OPTARG ;;
+    X) XOP="$OPTARG" ;;
+    x) set -x ;;
+    *) usage ;;
+  esac
+done
+shift $((OPTIND-1))
+
+if [ $XOP ] ;then
+  $XOP "$@"
+  exit $?
+fi
+
+# Usage check for files
+[ "$#" -ge 1 ] || usage
+main "$@"
+
+# vim: set sw=2 sts=2 et:
