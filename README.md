@@ -6,14 +6,15 @@ implemented with [tmux](https://github.com/tmux/tmux) and [grcat](https://github
 The following features thus come more or less for free.
 * Mouse aware for select, resize etc.
 * The full tmux copy-mode for scrollback browsing, searching etc
-* Easily extendible by adding bindings for tmux actions. The sky is the limit
+* Copy scrollback text to the clipboard (y & Y) without any fuzz, via tmux clipboard integration
+* Easily extendible by adding bindings for tmux actions. The sky is the limit ..
 
 Color highlighting is done with an node clone of grcat, [grcat.js](), which is about a factor 10 faster than the python original
 
 Currently a default grcat configuration is baked into tmtail that should be well suited for tailing [wildfly](https://www.wildfly.org/) logs
 
 ## Installation
-Dump [tmtail]() and [grcat.js]() somewhere in your $PATH
+Make sure tmux & node is installed, then dump [tmtail]() and [grcat.js]() somewhere in your $PATH
 
 ## Syntax
 `Usage: tmtail [-n lines] [-c colorconf] <file1> [file2] [file3] ...`
@@ -50,3 +51,4 @@ The following help text is provided when pressing `h` or `?`
 ```
 
 ## Screenshot
+<img width="829" height="707" alt="image" src="https://github.com/user-attachments/assets/6124ffe1-5737-4be8-8be2-bf20e1f5aa7f" />
