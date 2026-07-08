@@ -7,7 +7,7 @@ The following features thus come more or less for free.
 * Mouse aware for select, resize etc.
 * The full tmux copy-mode for scrollback browsing, searching etc
 * Copy scrollback text to the clipboard (y & Y) without any fuzz, via tmux clipboard integration
-* Easily extendible by adding bindings for tmux actions. The sky is the limit
+* Easily extendible by adding bindings for tmux actions. The sky is the limit ..
 
 Color highlighting is done with an node clone of grcat, [grcat.js](), which is about a factor 10 faster than the python original
 
