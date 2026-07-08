@@ -10,60 +10,60 @@ TAIL_LINES=1000
 tmux-conf() {
   cat << 'EOF'
 # --- General Settings ---
-set -g mouse on               # Enable mouse for scrolling/clicking if desired
-set -g history-limit 50000    # Generous scrollback buffer
+set-option mouse on               # Enable mouse for scrolling/clicking if desired
+set-option history-limit 50000    # Generous scrollback buffer
 
 # --- Pane Title / Status Line Configuration ---
-set -g pane-border-status top
-set -g pane-border-format "#[fg=black,bg=cyan,bold] #{pane_title} #[default]"
-set -g pane-border-style "fg=colour238,bg=default"
-set -g pane-active-border-style "fg=colour238,bg=cyan"
+set-option pane-border-status top
+set-option pane-border-format "#[fg=black,bg=cyan,bold] #{pane_title} #[default]"
+set-option pane-border-style "fg=colour238,bg=default"
+set-option pane-active-border-style "fg=colour238,bg=cyan"
 
-bind -n q kill-session
-bind -n Q kill-session
-bind -n : command-prompt
+bind-key -n q kill-session
+bind-key -n Q kill-session
+bind-key -n : command-prompt
 
 # --- One-Key Pane Navigation ---
-bind -n M-Up 'select-pane -U; run-shell "tmtail -P #{pane_id} -X distribute-active50"'
-bind -n M-Down 'select-pane -D; run-shell "tmtail -P #{pane_id} -X distribute-active50"'
-bind -n M-k 'select-pane -U; run-shell "tmtail -P #{pane_id} -X distribute-active50"'
-bind -n M-j 'select-pane -D; run-shell "tmtail -P #{pane_id} -X distribute-active50"'
-bind -n Left select-pane -L
-bind -n Right select-pane -R
-bind -n Up select-pane -U
-bind -n Down select-pane -D
-bind -n k select-pane -U
-bind -n j select-pane -D
-bind -n _ resize-pane -y 90%          # Maximise pane
-bind -n = select-layout even-vertical # Even out panes
-bind -n U select-layout even-vertical # Even out panes'
-bind -n Escape select-layout even-vertical # Even out panes'
-bind -n M-= select-layout tiled # Even out panes
-bind -n z resize-pane -Z
-bind -n h display-popup -E -T 'Command keys' -w 65 -h 27 -x C -y C tmtail -X show-help
-bind -n ? display-popup -E -T 'Command keys' -w 65 -h 27 -x C -y C tmtail -X show-help
+bind-key -n M-Up 'select-pane -U; run-shell "tmtail -P #{pane_id} -X distribute-active50"'
+bind-key -n M-Down 'select-pane -D; run-shell "tmtail -P #{pane_id} -X distribute-active50"'
+bind-key -n M-k 'select-pane -U; run-shell "tmtail -P #{pane_id} -X distribute-active50"'
+bind-key -n M-j 'select-pane -D; run-shell "tmtail -P #{pane_id} -X distribute-active50"'
+bind-key -n Left select-pane -L
+bind-key -n Right select-pane -R
+bind-key -n Up select-pane -U
+bind-key -n Down select-pane -D
+bind-key -n k select-pane -U
+bind-key -n j select-pane -D
+bind-key -n _ resize-pane -y 90%          # Maximise pane
+bind-key -n = select-layout even-vertical # Even out panes
+bind-key -n U select-layout even-vertical # Even out panes'
+bind-key -n Escape select-layout even-vertical # Even out panes'
+bind-key -n M-= select-layout tiled # Even out panes
+bind-key -n z resize-pane -Z
+bind-key -n h display-popup -E -T 'Command keys' -w 65 -h 27 -x C -y C tmtail -X show-help
+bind-key -n ? display-popup -E -T 'Command keys' -w 65 -h 27 -x C -y C tmtail -X show-help
 
 # --- Copy Mode & Navigation ---
-bind -n B 'run-shell "#{?pane_zoomed_flag,,tmux resize-pane -Z;} tmux copy-mode"'
-setw -g mode-keys vi
-bind -T copy-mode-vi Escape run-shell 'tmux send -X cancel; tmux select-layout even-vertical'
-bind -T copy-mode-vi U run-shell 'tmux send -X cancel; tmux select-layout even-vertical'
-bind -T copy-mode-vi B send -X halfpage-up
-bind -T copy-mode-vi F send -X halfpage-down
-bind -T copy-mode-vi y send -X copy-selection
-bind -T copy-mode-vi Y send -X copy-line
-bind -T copy-mode-vi v send -X select-word
+bind-key -n B 'run-shell "#{?pane_zoomed_flag,,tmux resize-pane -Z;} tmux copy-mode"'
+set-option -w -g mode-keys vi
+bind-key -T copy-mode-vi Escape run-shell 'tmux send -X cancel; tmux select-layout even-vertical'
+bind-key -T copy-mode-vi U run-shell 'tmux send -X cancel; tmux select-layout even-vertical'
+bind-key -T copy-mode-vi B send -X halfpage-up
+bind-key -T copy-mode-vi F send -X halfpage-down
+bind-key -T copy-mode-vi y send -X copy-selection
+bind-key -T copy-mode-vi Y send -X copy-line
+bind-key -T copy-mode-vi v send -X select-word
 
 #bind -n u choose-tree -F "#[fg=blue,bold]#{pane_title}#[default] (Pane #{pane_index}) -> #{pane_current_command}" \
 #                       "select-pane -t %1; resize-pane -y 90%"
 
 # --- 'u' to bring up a stable popup menu to choose and maximize a pane ---
-bind -n u run-shell 'tmtail -X select-for-maximize #{client_name}'
+bind-key -n u run-shell 'tmtail -X select-for-maximize #{client_name}'
 # --- '+' to make current pane 50% height and distribute the rest evenly ---
-bind -n + run-shell 'tmtail -P #{pane_id} -X distribute-active50'
+bind-key -n + run-shell 'tmtail -P #{pane_id} -X distribute-active50'
 # --- One-Key Marker Line (All Panes + Solid Background) ---
-bind -n Enter run-shell 'tmtail -X add-marker'
-bind -n Space run-shell 'tmtail -X add-marker'
+bind-key -n Enter run-shell 'tmtail -X add-marker'
+bind-key -n Space run-shell 'tmtail -X add-marker'
 EOF
 }
 
@@ -108,8 +108,10 @@ main() {
   # Start the tmux session with the first file
   FIRST_FILE="$1"
   FIRST_CMD="tmtail -X tail_cmd \"$FIRST_FILE\" \"$TAIL_LINES\""
-  tmux -f <(tmux-conf) new-session -d -s "$TSESS" -n "multitail" "$FIRST_CMD"
+  tmux -f <(tmux-conf) new-session -d -s "$TSESS" -n "tmtail log monitor" "$FIRST_CMD"
   tmux select-pane -t "$TSESS.0" -T "$(basename "$FIRST_FILE")"
+  tmux set-option -t $TSESS history-limit $(( TAIL_LINES * 10 ))
+
 
   # Loop through the remaining files and split the panes
   shift
