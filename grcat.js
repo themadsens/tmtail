@@ -1,5 +1,11 @@
 #!/usr/bin/env node
 
+/**
+ COPYING:
+ This file probably carries the license from the "grc" project, which seems to consist of the following line
+   debian/copyright
+*/
+
 const fs = require('fs');
 const path = require('path');
 const { execSync } = require('child_process');
