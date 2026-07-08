@@ -50,3 +50,4 @@ The following help text is provided when pressing `h` or `?`
 ```
 
 ## Screenshot
+<img width="829" height="707" alt="image" src="https://github.com/user-attachments/assets/6124ffe1-5737-4be8-8be2-bf20e1f5aa7f" />
