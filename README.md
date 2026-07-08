@@ -14,7 +14,7 @@ Color highlighting is done with an node clone of grcat, [grcat.js](), which is a
 Currently a default grcat configuration is baked into tmtail that should be well suited for tailing [wildfly](https://www.wildfly.org/) logs
 
 ## Installation
-Dump [tmtail]() and [grcat.js]() somewhere in your $PATH
+Make sure tmux & node is installed, then dump [tmtail]() and [grcat.js]() somewhere in your $PATH
 
 ## Syntax
 `Usage: tmtail [-n lines] [-c colorconf] <file1> [file2] [file3] ...`
