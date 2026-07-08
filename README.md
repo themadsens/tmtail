@@ -1,6 +1,6 @@
 # tmtail
 
-An ad-hoc replacement for [folkertvanheusden/multitail](https://github.com/https://github.com/folkertvanheusden/multitail) 
+An ad-hoc replacement for [multitail](https://vanheusden.com/multitail/) 
 implemented with [tmux](https://github.com/tmux/tmux) and [grcat](https://github.com/garabik/grc)
 
 The following features thus come more or less for free.
