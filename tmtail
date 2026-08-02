@@ -20,8 +20,9 @@ set-option -g pane-border-format "#[fg=black,bg=cyan,bold] #{pane_title} #[defau
 set-option -g pane-border-style "fg=colour238,bg=default"
 set-option -g pane-active-border-style "fg=colour238,bg=cyan"
 
-bind-key -n q kill-server
-bind-key -n Q kill-server
+# Work around bug when exiting in zoomed pane in tmux 3.4 (24.04)
+bind-key -n q if-shell -F "#{window_zoomed_flag}" "resize-pane -Z" "" \; kill-session
+bind-key -n Q if-shell -F "#{window_zoomed_flag}" "resize-pane -Z" "" \; kill-session
 bind-key -n : command-prompt
 
 # --- One-Key Pane Navigation ---
