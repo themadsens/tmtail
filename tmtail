@@ -10,14 +10,15 @@ TAIL_LINES=1000
 tmux-conf() {
   cat << 'EOF'
 # --- General Settings ---
-set-option mouse on               # Enable mouse for scrolling/clicking if desired
-set-option history-limit 50000    # Generous scrollback buffer
+set-option -g history-file $HOME/.tmtail-history
+set-option -g mouse on               # Enable mouse for scrolling/clicking if desired
+set-option -g history-limit 50000    # Generous scrollback buffer
 
 # --- Pane Title / Status Line Configuration ---
-set-option pane-border-status top
-set-option pane-border-format "#[fg=black,bg=cyan,bold] #{pane_title} #[default]"
-set-option pane-border-style "fg=colour238,bg=default"
-set-option pane-active-border-style "fg=colour238,bg=cyan"
+set-option -g pane-border-status top
+set-option -g pane-border-format "#[fg=black,bg=cyan,bold] #{pane_title} #[default]"
+set-option -g pane-border-style "fg=colour238,bg=default"
+set-option -g pane-active-border-style "fg=colour238,bg=cyan"
 
 bind-key -n q kill-session
 bind-key -n Q kill-session
@@ -46,7 +47,8 @@ bind-key -n ? display-popup -E -T 'Command keys' -w 65 -h 27 -x C -y C tmtail -X
 # --- Copy Mode & Navigation ---
 bind-key -n B 'run-shell "#{?pane_zoomed_flag,,tmux resize-pane -Z;} tmux copy-mode"'
 set-option -w -g mode-keys vi
-bind-key -T copy-mode-vi Escape run-shell 'tmux send -X cancel; tmux select-layout even-vertical'
+bind-key -T copy-mode-vi Escape run-shell 'tmux send -X cancel'
+bind-key -T copy-mode-vi q run-shell 'tmux send -X cancel'
 bind-key -T copy-mode-vi U run-shell 'tmux send -X cancel; tmux select-layout even-vertical'
 bind-key -T copy-mode-vi B send -X halfpage-up
 bind-key -T copy-mode-vi F send -X halfpage-down
@@ -102,6 +104,8 @@ main() {
   unset TMUX
   unset TMUX_PANE
   export TSESS=tmtail-$$
+  export TMTMP=tmtail-$$
+  export TMUX_TMPDIR=$(mktemp -d)
 
   # Default tail history count
 
@@ -109,8 +113,8 @@ main() {
   FIRST_FILE="$1"
   FIRST_CMD="tmtail -X tail_cmd \"$FIRST_FILE\" \"$TAIL_LINES\""
   tmux -f <(tmux-conf) new-session -d -s "$TSESS" -n "tmtail log monitor" "$FIRST_CMD"
+  tmux set-option -g -t $TSESS history-limit $(( TAIL_LINES * 10 ))
   tmux select-pane -t "$TSESS.0" -T "$(basename "$FIRST_FILE")"
-  tmux set-option -t $TSESS history-limit $(( TAIL_LINES * 10 ))
 
 
   # Loop through the remaining files and split the panes
@@ -127,19 +131,25 @@ main() {
 
   # Attach to the created session
   tmux attach-session -t "$TSESS"
+  #tmux kill-server
+  rm -rf $TMUX_TMPDIR/tmux-*
+  rmdir $TMUX_TMPDIR
 }
 
 # Function to pick a highlighter and append tail parameters
 tail_cmd() {
   local file="$1"
   local lines="$2"
-  trap 'stty echoctl' EXIT
-  stty -echoctl
   if [ $COLOR_CONFIG ] ;then
-    tail -n $lines -F "$file" | grcat.js $COLOR_CONFIG
+    tail -n $lines -F "$file" < /dev/null | grcat.js $COLOR_CONFIG &
   else
-    tail -n $lines -F "$file" | grcat.js <(grcat_conf)
+    tail -n $lines -F "$file" < /dev/null | grcat.js <(grcat_conf) &
   fi
+  while read -s -d '#' CMD ARG ;do
+    case "$CMD" in 
+      *MARKER) get-marker $ARG ;;
+    esac
+  done
 }
 
 grcat_conf() {
@@ -197,6 +207,15 @@ colours=red bold
 regexp=An (error occurred) at line
 colours=red
 =====
+regexp=WildFly.* Core .* started .* services
+colours=black on_green
+=====
+regexp=WildFly .* Core .* stopped
+colours=black on_green
+=====
+regexp=WildFly .* Core .* starting
+colours=black on_green
+=====
 regexp=WildFly.*\"Tweek\".*Started.*services
 colours=black on_green
 =====
@@ -243,28 +262,27 @@ distribute-active50() {
 
 add-marker() {
   panes=$(tmux list-panes -t $TSESS -F "#{pane_id}")
+  for pid in $panes; do \
+    tmux send-keys -l -t "$TSESS.$pid" "MARKER $pid #"
+  done
+}
+
+get-marker() {
+  local pid=$1
   timestamp=$(date +" %Y-%m-%d %H:%M:%S ")
-  if tmux paste-buffer -S -b "nonexistent_test_buffer" 2>&1 | grep -q "unknown flag"; then
-    raw_flag=""
-  else
-    raw_flag="-S"
+
+  width=$(tmux display-message -t "$TSESS.$pid" -p "#{pane_width}")
+  half_width=$(( (width - ${#timestamp}) / 2 ))
+  if [ $half_width -le 0 ]; then half_width=1; fi
+
+  marker_line=$(printf "%*s" $half_width '')
+  marker_line="${marker_line}${timestamp}"
+  rem_width=$(( width - ${#marker_line}))
+  if [ $rem_width -gt 0 ] ;then
+    marker_line="${marker_line}$(printf "%*s" $rem_width '')"
   fi
 
-  for pid in $panes; do \
-    width=$(tmux display-message -t "$TSESS.$pid" -p "#{pane_width}")
-    half_width=$(( (width - ${#timestamp}) / 2 ))
-    if [ $half_width -le 0 ]; then half_width=1; fi
-
-    marker_line=$(printf "%*s" $half_width '')
-    marker_line="${marker_line}${timestamp}"
-    rem_width=$(( width - ${#marker_line}))
-    if [ $rem_width -gt 0 ] ;then
-      marker_line="${marker_line}$(printf "%*s" $rem_width '')"
-    fi
-
-     tmux set-buffer -t $TSESS -b LINE "$(printf "\033[34m\033[1;103m%s\033[0m\n" "$marker_line")"
-     tmux paste-buffer $raw_flag -t $TSESS.$pid -b LINE
-    done
+   printf "\033[34m\033[1;103m%s\033[0m\n" "$marker_line"
 }
 
 usage() {
