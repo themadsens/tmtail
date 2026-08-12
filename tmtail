@@ -42,6 +42,7 @@ bind-key -n U select-layout even-vertical # Even out panes'
 bind-key -n Escape select-layout even-vertical # Even out panes'
 bind-key -n M-= select-layout tiled # Even out panes
 bind-key -n z resize-pane -Z
+bind-key -n Enter resize-pane -Z
 bind-key -n h display-popup -E -T 'Command keys' -w 65 -h 27 -x C -y C tmtail -X show-help
 bind-key -n ? display-popup -E -T 'Command keys' -w 65 -h 27 -x C -y C tmtail -X show-help
 
@@ -76,7 +77,6 @@ bind-key -n u run-shell 'tmtail -X select-for-maximize #{client_name}'
 # --- '+' to make current pane 50% height and distribute the rest evenly ---
 bind-key -n + run-shell 'tmtail -P #{pane_id} -X distribute-active50'
 # --- One-Key Marker Line (All Panes + Solid Background) ---
-bind-key -n Enter run-shell 'tmtail -X add-marker'
 bind-key -n Space run-shell 'tmtail -X add-marker'
 EOF
 }
@@ -94,7 +94,7 @@ show-help() {
   _           Set pane height to 90%
   =,U,Escape  Show all panes in equal height
   M-=         Show panes tiled
-  z           Zoom pane
+  z,Enter     Zoom pane toggle
   u           Select pane from a menu to zoom (but not scroll)
   B           Zoom pane (if not) and enter scrollback mode
   B           One halfpage back if in scrollback mode already
@@ -104,7 +104,7 @@ show-help() {
   ?,/,n,N,V   Search etc. in scrollback mode.
               See man tmux / copy-mode for others
   h,?         Show this help text
-  Enter,Space Add a marker line to all panes
+  Space       Add a marker line to all panes
   :           Enter the tmux command prompt
   q,Q         quit
 EOF
