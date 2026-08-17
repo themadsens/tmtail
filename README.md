@@ -35,8 +35,9 @@ The following help text is provided when pressing `h` or `?`
   _           Set pane height to 90%
   =,U,Escape  Show all panes in equal height
   M-=         Show panes tiled
-  z           Zoom pane
+  z,Enter     Toggle zoom pane
   u           Select pane from a menu to zoom (but not scroll)
+  s,S         Enter scrollback
   B           Zoom pane (if not) and enter scrollback mode
   B           One halfpage back if in scrollback mode already
   F           One halfpage forward if in scrollback mode
@@ -45,7 +46,7 @@ The following help text is provided when pressing `h` or `?`
   ?,/,n,N,V   Search etc. in scrollback mode.
               See man tmux / copy-mode for others
   h,?         Show this help text
-  Enter,Space Add a marker line to all panes
+  Space       Add a marker line to all panes
   :           Enter the tmux command prompt
   q,Q         quit
 ```

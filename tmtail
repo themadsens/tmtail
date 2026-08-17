@@ -48,6 +48,8 @@ bind-key -n ? display-popup -E -T 'Command keys' -w 65 -h 27 -x C -y C tmtail -X
 
 # --- Copy Mode & Navigation ---
 bind-key -n B if-shell -F "#{window_zoomed_flag}" "" "resize-pane -Z" \; copy-mode
+bind-key -n s copy-mode
+bind-key -n S copy-mode
 set-option -w -g mode-keys vi
 bind-key -T copy-mode-vi Escape run-shell 'tmux send -X cancel'
 bind-key -T copy-mode-vi q run-shell 'tmux send -X cancel'
@@ -94,8 +96,9 @@ show-help() {
   _           Set pane height to 90%
   =,U,Escape  Show all panes in equal height
   M-=         Show panes tiled
-  z,Enter     Zoom pane toggle
+  z,Enter     Toggle zoom pane
   u           Select pane from a menu to zoom (but not scroll)
+  s,S         Enter scrollback
   B           Zoom pane (if not) and enter scrollback mode
   B           One halfpage back if in scrollback mode already
   F           One halfpage forward if in scrollback mode
@@ -187,6 +190,9 @@ colours=blue bold on_bright_yellow
 =====
 #Keys
 regexp=[a-zA-Z_]+[=:]
+colours=bold
+=====
+regexp="[a-zA-Z_]+":
 colours=bold
 =====
 regexp=\(([a-zA-Z_-]*.java)(:[0-9]*)\)
