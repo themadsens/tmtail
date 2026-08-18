@@ -186,10 +186,10 @@ colours=bold magenta
 count=more
 ===========================
 regexp=amplex
-colours=blue bold on_bright_yellow
+colours=red bold on_bright_yellow
 =====
 #Keys
-regexp=[a-zA-Z_]+[=:]
+regexp=\b[a-zA-Z_]+[=:]
 colours=bold
 =====
 regexp="[a-zA-Z_]+":
@@ -242,8 +242,14 @@ colours=black on_green
 =====
 regexp=^Caused by
 colours=red on_white bold
-
 EOF
+if [ $HIGHLIGHT ] ;then
+  cat << EOF
+====
+regexp=$HIGHLIGHT
+colours=black bold on_bright_yellow
+EOF
+fi
 }
 
 select-for-maximize() {
@@ -304,14 +310,15 @@ get-marker() {
 }
 
 usage() {
-  echo "Usage: ${0##*/} [-n lines] [-c colorconf] <file1> [file2] [file3] ..."
+  echo "Usage: ${0##*/} [-n lines] [{-c colorconf|-h highlightpattern}] <file1> [file2] [file3] ..."
   exit 1
 }
 
-while getopts "n:c:P:X:x" opt; do
+while getopts "n:c:h:P:X:x" opt; do
   case "$opt" in
     n) TAIL_LINES=$OPTARG ;;
     c) COLOR_CONFIG=$OPTARG ;;
+    h) export HIGHLIGHT=$OPTARG ;;
     P) TPANE=$OPTARG ;;
     X) XOP="$OPTARG" ;;
     x) set -x ;;

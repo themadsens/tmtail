@@ -17,7 +17,7 @@ Currently a default grcat configuration is baked into tmtail that should be well
 Make sure tmux & node is installed, then dump [tmtail](tmtail) and [grcat.js](grcat.js) somewhere in your $PATH
 
 ## Syntax
-`Usage: tmtail [-n lines] [-c colorconf] <file1> [file2] [file3] ...`
+`Usage: tmtail [-n lines] [{-c colorconf|-h highlightpattern}] <file1> [file2] [file3] ...`
 
 Default scrollback is 1000 lines.<br/>
 A `colorconf` file is located in the same places [grcat](https://github.com/garabik/grc#configuration) will look.
