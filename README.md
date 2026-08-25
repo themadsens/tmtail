@@ -14,6 +14,9 @@ Color highlighting is done with an node clone of grcat, [grcat.js](), which is a
 Currently a default grcat configuration is baked into tmtail that should be well suited for tailing [wildfly](https://www.wildfly.org/) logs
 
 ## Installation
+#### With homebrew or linuxbrew
+```brew install themadsens/tap/tmtail```
+#### From source
 Make sure tmux & node is installed, then dump [tmtail](tmtail) and [grcat.js](grcat.js) somewhere in your $PATH
 
 ## Syntax
@@ -52,4 +55,4 @@ The following help text is provided when pressing `h` or `?`
 ```
 
 ## Screenshot
-<img width="829" height="707" alt="image" src="https://github.com/user-attachments/assets/6124ffe1-5737-4be8-8be2-bf20e1f5aa7f" />
+<img width="912" height="778" alt="image" src="https://github.com/user-attachments/assets/e03daf0a-86c4-4d6d-953d-31929650f4d9" />
